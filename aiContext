@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Functions
+
+get_install_instructions() {
+  case "$(uname -s)" in
+    Linux*)     echo "Please install $1 using 'sudo apt-get install $1' or the appropriate package manager for your system." ;;
+    Darwin*)    echo "Please install $1 using 'brew install $1' or the appropriate package manager for your system." ;;
+    CYGWIN*|MINGW*|MSYS*) echo "Please install $1 using 'scoop install $1' or the appropriate package manager for your system." ;;
+    *)          echo "Please install $1 using the appropriate package manager for your system." ;;
+  esac
+}
+
+check_dependency() {
+  if ! command -v $1 >/dev/null; then
+    echo "Error: $1 is not installed."
+    instructions=$(get_install_instructions "$1")
+    echo "$instructions"
+    exit 1
+  fi
+}
+
+get_vcs_info() {
+  if [ -d ".git" ]; then
+    echo -e "\nVersion Control Information (Git):"
+    echo "Current Branch:"
+    git symbolic-ref --short HEAD
+
+    echo -e "\nCommit History:"
+    git log --oneline -n 5
+
+    echo -e "\nUncommitted Changes:"
+    git status --short
+  else
+    echo -e "\nVersion Control Information:"
+    echo "No Git repository detected."
+  fi
+}
+
+# Function to generate output
+generate_output() {
+  # Provide context
+  echo "Dear ChatGPT-4, I'm providing you with metadata, directory structure, the current README.md content, and the preferences.md file for the project we'll be working on together. README.md contains notes on the project, while preferences.md stores my preferences, such as color schemes, fonts, coding conventions, communication style, and anything else that wouldn't belong in README.md. If you need an updated version of this information, please ask me to run './aiContext' and provide the output. As we communicate, please give me suggested updates to README.md and preferences.md, such that if the context of this conversation is lost, providing the output of './aiContext' will be sufficient to get you up to speed. While we work together, please ensure that we follow best coding practices and conventions, keep the project clean and maintainable, and reassess for improvements and optimizations when needed. Assist me in choosing the best technologies, libraries, and tools, and help me stay up to date with industry trends. Encourage me to write tests, clear documentation, and maintain a balance between feature development and technical debt. Keep an eye on performance, accessibility, security, and resource utilization, and guide me in creating a user-friendly and intuitive user interface. Help me manage dependencies, set up proper version control, and prioritize tasks and features. If you come across any ambiguities or uncertainties in my instructions or the project, please ask me for clarification rather than making assumptions. Together, let's ensure that our project follows SEO best practices, adheres to accessibility standards, and is optimized for lower memory consumption, faster load times, and efficient CPU usage."
+
+  # Output README.md (if exists)
+  if [ -f "README.md" ]; then
+    echo -e "\nREADME.md Content:"
+    cat README.md
+  fi
+
+  # Output preferences.md (if exists)
+  if [ -f "preferences.md" ]; then
+    echo -e "\nPreferences:"
+    cat preferences.md
+  fi
+
+  # Output package.json (if exists)
+  if [ -f "package.json" ]; then
+    echo -e "\nPackage Information:"
+    cat package.json | jq
+  fi
+
+  # Output requirements.txt (if exists)
+  if [ -f "requirements.txt" ]; then
+    echo -e "\nPython Dependencies:"
+    cat requirements.txt
+  fi
+
+  # Output project directory
+    echo -e "\nProject Directory:"
+  tree -J -o tree.json --noreport .
+  python3_code=$(cat <<'EOF'
+import json
+import sys
+
+def pretty_print_json(json_data):
+    parsed = json.loads(json_data)
+    print(json.dumps(parsed, indent=2, sort_keys=True))
+
+if __name__ == '__main__':
+    with open('tree.json', 'r') as f:
+        json_data = f.read()
+    pretty_print_json(json_data)
+EOF
+)
+  echo "$python3_code" | python3 - tree.json
+  rm tree.json
+
+  # Add the version control information
+  get_vcs_info
+}
+
+copy_to_clipboard() {
+  if command -v xclip >/dev/null; then
+    echo -e "$1" | xclip -selection clipboard
+  elif command -v pbcopy >/dev/null; then
+    echo -e "$1" | pbcopy
+  elif command -v clip >/dev/null; then
+    echo -e "$1" | clip
+  else
+    echo -e "\nNote: Unable to automatically copy the output to the clipboard."
+    case "$(uname -s)" in
+      Linux*) echo -e "\033[0;33mPlease install 'xclip' using 'sudo apt-get install xclip' or the appropriate package manager for your system.\033[0m" ;;
+      Darwin*) echo -e "\033[0;33mPlease install 'pbcopy' using the appropriate package manager for your system.\033[0m" ;;
+      CYGWIN*|MINGW*|MSYS*) echo -e "\033[0;33mPlease use 'clip' on Windows.\033[0m" ;;
+      *) echo -e "\033[0;33mPlease install the appropriate clipboard utility for your system.\033[0m" ;;
+    esac
+  fi
+}
+
+# Check dependencies
+check_dependency "jq"
+check_dependency "tree"
+
+# Generate and print output
+output=$(generate_output)
+echo -e "$output"
+
+# Copy output to clipboard
+copy_to_clipboard "$output"
+echo -e "\033[1;32mOutput has been copied to clipboard\033[0m"
+
