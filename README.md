@@ -2,6 +2,12 @@
 
 This script, named `aiContext`, serves as a tool to enhance communication between you and your AI assistant, such as ChatGPT-4. It's designed to provide the AI with essential context about your ongoing project, including your preferences and project details, to enable a smoother collaboration.
 
+
+## install
+
+[homebrew](https://github.com/robrien20/aiContext-homebrew)
+
+
 ## Features
 
 - Provides metadata, directory structure, README.md, and preferences.md to the AI
