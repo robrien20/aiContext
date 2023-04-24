@@ -1,22 +1,22 @@
 [
   {
-    "flag": "no_flag",
+    "flag": "",
     "prompt": "No flag has been provided."
   },
   {
-    "flag": "flag1",
-    "prompt": "This is the prompt for flag 1."
+    "flag": "-a",
+    "prompt": "This is the prompt for flag a."
   },
   {
-    "flag": "flag2",
-    "prompt": "This is the prompt for flag 2."
+    "flag": "-b",
+    "prompt": "This is the prompt for flag b."
   },
   {
-    "flag": "flag3",
-    "prompt": "This is the prompt for flag 3."
+    "flag": "-c",
+    "prompt": "This is the prompt for flag c."
   },
   {
-    "flag": "flag4",
-    "prompt": "This is the prompt for flag 4."
+    "flag": "-d",
+    "prompt": "This is the prompt for flag d."
   }
 ]
