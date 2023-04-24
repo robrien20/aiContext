@@ -2,6 +2,10 @@
 
 # Functions
 
+is_git_repository() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
 get_install_instructions() {
   case "$(uname -s)" in
     Linux*)     echo "Please install $1 using 'sudo apt-get install $1' or the appropriate package manager for your system." ;;
@@ -70,24 +74,45 @@ generate_output() {
     echo -e "\nProject Directory:"
   tree -J -o tree.json --noreport .
   python3_code=$(cat <<'EOF'
+import os
 import json
-import sys
+from pathspec import PathSpec
+from pathspec.patterns import GitWildMatchPattern
 
-def pretty_print_json(json_data):
-    parsed = json.loads(json_data)
+def get_gitignore_spec():
+    if os.path.exists('.gitignore'):
+        with open('.gitignore', 'r') as f:
+            gitignore_lines = f.read().splitlines()
+        return PathSpec.from_lines(GitWildMatchPattern, gitignore_lines)
+    return None
 
-    # Exclude the tree.json file from the output
-    for entry in parsed:
-        if entry["name"] == ".":
-            entry["contents"] = [x for x in entry["contents"] if x["name"] != "tree.json"]
+def is_ignored(gitignore_spec, root, path):
+    relative_path = os.path.relpath(path, root)
+    return (
+        ".git/" in relative_path or
+        (gitignore_spec and gitignore_spec.match_file(relative_path))
+    )
 
-    print(json.dumps(parsed, indent=2, sort_keys=True))
+def get_directory_contents(root, gitignore_spec):
+    contents = {}
+    entries = list(os.scandir(root))
+
+    for entry in entries:
+        path = os.path.join(root, entry.name)
+        if not is_ignored(gitignore_spec, ".", path):
+            if entry.is_dir():
+                contents[entry.name] = get_directory_contents(path, gitignore_spec)
+            else:
+                contents[entry.name] = {}
+
+    return contents
+
+if __name__ == "__main__":
+    gitignore_spec = get_gitignore_spec()
+    directory_contents = get_directory_contents(".", gitignore_spec)
+    print(json.dumps(directory_contents, indent=2))
 
 
-if __name__ == '__main__':
-    with open('tree.json', 'r') as f:
-        json_data = f.read()
-    pretty_print_json(json_data)
 EOF
 )
   echo "$python3_code" | python3 - tree.json
@@ -114,6 +139,12 @@ copy_to_clipboard() {
     esac
   fi
 }
+
+# Check if the current directory is a git repository
+if ! is_git_repository; then
+  echo -e "\033[1;31mWarning: This script should be run from a git repository.\033[0m"
+  exit 1
+fi
 
 # Check dependencies
 check_dependency "jq"
