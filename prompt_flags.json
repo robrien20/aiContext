@@ -1,0 +1,22 @@
+[
+  {
+    "flag": "no_flag",
+    "prompt": "No flag has been provided."
+  },
+  {
+    "flag": "flag1",
+    "prompt": "This is the prompt for flag 1."
+  },
+  {
+    "flag": "flag2",
+    "prompt": "This is the prompt for flag 2."
+  },
+  {
+    "flag": "flag3",
+    "prompt": "This is the prompt for flag 3."
+  },
+  {
+    "flag": "flag4",
+    "prompt": "This is the prompt for flag 4."
+  }
+]
